@@ -1,1 +1,3 @@
-"# glcache" 
+# GLCache
+
+GLCache is a very simple API that wraps direct OpenGL calls to functions that keep track of an internal state. This will reduce the number of state tracking in your application, and the overall number of OpenGL calls. Additionally, the calls return the last state before changing it, so scoped binding can be done easily. 
