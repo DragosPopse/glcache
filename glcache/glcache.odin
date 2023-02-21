@@ -80,6 +80,16 @@ Buffer_Target :: enum u32 {
     UNIFORM_BUFFER = gl.UNIFORM_BUFFER,
 }
 
+Framebuffer_Target :: enum u32 {
+    FRAMEBUFFER = gl.FRAMEBUFFER,
+    DRAW_FRAMEBUFFER = gl.DRAW_FRAMEBUFFER,
+    READ_FRAMEBUFFER = gl.READ_FRAMEBUFFER,
+}
+
+Renderbuffer_Target :: enum u32 {
+    RENDERBUFFER = gl.RENDERBUFFER,
+}
+
 Capability :: enum u32 {
     ALPHA_TEST = gl.ALPHA_TEST,
     AUTO_NORMAL = gl.AUTO_NORMAL,
@@ -176,6 +186,10 @@ Cache :: struct {
     blend_equations: Blend_Equations,
 
     cull_mode: Face,
+
+    draw_framebuffer: u32,
+    read_framebuffer: u32,
+    renderbuffer: u32,
 }
 
 cache: Cache
@@ -306,4 +320,38 @@ BindTexture :: proc(target: Texture_Target, texture: u32) -> (last_texture: u32)
         cache.textures[target] = texture
     }
     return last_texture
+}
+
+BindFramebuffer :: proc(target: Framebuffer_Target, framebuffer: u32) -> (last_draw_framebuffer, last_read_framebuffer: u32) {
+    last_draw_framebuffer = cache.draw_framebuffer
+    last_read_framebuffer = cache.read_framebuffer
+
+    switch target {
+        case .FRAMEBUFFER: if cache.draw_framebuffer != framebuffer || cache.read_framebuffer != framebuffer {
+            gl.BindFramebuffer(cast(u32)target, framebuffer)
+            cache.draw_framebuffer, cache.read_framebuffer = framebuffer, framebuffer
+        }
+
+        case .DRAW_FRAMEBUFFER: if cache.draw_framebuffer != framebuffer {
+            gl.BindFramebuffer(cast(u32)target, framebuffer)
+            cache.draw_framebuffer = framebuffer
+        }
+
+        case .READ_FRAMEBUFFER: if cache.read_framebuffer != framebuffer {
+            gl.BindFramebuffer(cast(u32)target, framebuffer)
+            cache.read_framebuffer = framebuffer
+        }
+    }
+    
+    return last_draw_framebuffer, last_read_framebuffer
+}
+
+BindRenderbuffer :: proc(target: Renderbuffer_Target, renderbuffer: u32) -> (last_renderbuffer: u32) {
+    last_renderbuffer = cache.renderbuffer
+    if last_renderbuffer != renderbuffer {
+        gl.BindRenderbuffer(cast(u32)target, renderbuffer)
+        cache.renderbuffer = renderbuffer
+    }
+
+    return last_renderbuffer
 }
